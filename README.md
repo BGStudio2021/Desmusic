@@ -10,3 +10,4 @@ Desmos 音乐制作工具
 成品演示： [《歌唱祖国》](https://www.desmos.com/calculator/ubrhvldxev) [《国际歌》](https://www.desmos.com/calculator/b3ayvzfyun)
 <br>
 **注意：此工具并不适用于所有简谱，部分音符可能需要手动调整。**
+（作者没有系统地学过乐理知识，有些地方描述不恰当，还请谅解。）
