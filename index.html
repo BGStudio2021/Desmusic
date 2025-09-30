@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Desmos 音乐制作</title>
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .notearea input::-webkit-outer-spin-button,
+        .notearea input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .notearea {
+            position: relative;
+            height: 112px;
+            width: 84px;
+            margin: 40px auto 80px auto;
+        }
+
+        .notearea input {
+            font-size: 64px;
+            text-align: center;
+            width: 64px !important;
+            height: 92px;
+            margin: 0;
+        }
+
+        .notearea .dot {
+            position: absolute;
+            left: calc(50% - 8px);
+            width: 16px;
+            height: 16px;
+            border-radius: 16px;
+            background: #373737;
+            transition: 0.1s;
+        }
+
+        .notearea .bar {
+            position: absolute;
+            left: 0;
+            width: 84px;
+            height: 12px;
+            background: #373737;
+            transition: 0.1s;
+        }
+
+        .notearea .active {
+            background: #4CC2FF;
+            transition: 0s;
+        }
+
+        .notearea .dot:hover,
+        .notearea .bar:hover {
+            background: #3C3C3C;
+        }
+
+        .notearea .dot:active,
+        .notearea .bar:active {
+            background: #323232;
+        }
+
+        .notearea .active:hover {
+            background: #49B3EA;
+        }
+
+        .notearea .active:active {
+            background: #46A5D6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="title-1">Desmos 音乐制作</div>
+        <div class="quotation">
+            这是一个可以利用 Desmos 制作音乐的工具，使用步骤如下：<br>
+            1. 在下方制作乐谱，并进行处理。<br>
+            2. 打开 <a href="https://www.desmos.com/calculator/vksw5azxpi" class="link">空白模板</a> ，保存副本（需登录 Desmos
+            账号），将处理后的数据填写在相应的“{}”内（下方“处理结果”中“音频”部分对应前 15 个 tone 函数的取值范围，“可视化”部分则对应直线的取值范围）。<br>
+            3. 将下方“处理结果”中“没有数据”对应的 tone 函数和直线删去。<br>
+            4. 将滑块“t”的最大值改为下方“处理结果”中“总长度”的值，播放并调整速度，完成制作。<br>
+            成品演示： <a href="https://www.desmos.com/calculator/ubrhvldxev" class="link">《歌唱祖国》</a><a href="https://www.desmos.com/calculator/pnl8e1ciqd" class="link">《国际歌》</a>
+        </div>
+        <div class="title-2">制作乐谱</div>
+        <div class="quotation" style="margin: 16px 0;">
+            请按照顺序在下方填写音符信息（与简谱中的相同），并将其添加至乐谱中。<br>
+            注意：此工具并不适用于所有简谱，部分音符可能需要手动调整。<br>
+            乐谱格式（了解）：<br>
+            - 音符之间用半角逗号隔开，每个音符由三位或四位数字组成。<br>
+            - 第一位数字：音高，取值为 0~7（休止符前两位都为“0”）。<br>
+            - 第二位数字：音高变化，取值为 0~2（0-低八度，1-正常，2-高八度）。<br>
+            - 第三位数字：音长，取值为 1、2、4、a、b、c（1-四分音符，2-八分音符，4-十六分音符，a-两个四分音符，b-三个四分音符，c-全音符）。<br>
+            - 第四位数字：附点，有附点为 1，无附点留空。
+        </div>
+        <div style="text-align: center;">
+            <div class="notearea">
+                <input type="number" id="input_note" class="input">
+                <div class="dot pitch-2" style="top: -24px;" onclick="setCurrentNote('pitch', '2');"></div>
+                <div class="dot pitch-0" style="bottom: -64px;" onclick="setCurrentNote('pitch', '0');"></div>
+                <div class="dot note-dot" style="bottom: 0;right: -24px;left: unset !important;"
+                    onclick="setCurrentNote('dot');"></div>
+                <div class="bar duration-2" style="bottom: -20px;" onclick="setCurrentNote('duration', '2');"></div>
+                <div class="bar duration-4" style="bottom: -40px;" onclick="setCurrentNote('duration', '4');"></div>
+            </div>
+            <button class="btn btn-accent" onclick="addNote();">添加音符</button>
+            <textarea type="text" id="input_melody" class="input" style="height: 80px;margin-top: 16px;"></textarea>
+        </div>
+        <div style="display: grid; grid-template-columns: calc(50% - 8px) calc(50% - 8px);gap: 16px;">
+            <button class="btn btn-copy-melody"
+                onclick="copyHandle(document.querySelector('#input_melody').value);showCopyMsg_1();">复制</button>
+            <button class="btn btn-accent"
+                onclick="parseMelody(document.querySelector('#input_melody').value);">处理</button>
+        </div>
+        <div class="title-2" style="display: inline-block;vertical-align: middle;margin-bottom: 0;">处理结果</div>
+        <div style="display: inline-block;vertical-align: middle;font-size: 14px;margin-top: 32px;">（点按即可复制）</div>
+        <div class="result-length" style="margin: 16px 0;"></div>
+        <div class="title-3">音频</div>
+        <div class="results-tone">
+            <div class="list-item">
+                没有数据
+                <div class="list-item-index">0</div>
+            </div>
+        </div>
+        <div class="title-3">可视化</div>
+        <div class="results-line">
+            <div class="list-item">
+                没有数据
+                <div class="list-item-index">0</div>
+            </div>
+        </div>
+        <div style="text-align: center;margin-top: 32px;">Designed by Burger Studio.</div>
+    </div>
+    <script>
+        // 解析乐谱字符串
+        // 以一个十六分音符为一个单位
+        function parseMelody(melody) {
+            var result = [];
+            var _melody = melody.split(',');
+            _melody.forEach(function (item) {
+                var _pitch = item.slice(1, 2);
+                var _note = Number(item.slice(0, 1)) + _pitch * 7;
+                var _length = item.slice(2, 3);
+                if (_length === 'a') {
+                    _length = 0.5;
+                } else if (_length === 'b') {
+                    _length = 1 / 3;
+                } else if (_length === 'c') {
+                    _length = 0.25;
+                }
+                var _duration = 4 / _length;
+                var _dot = item.slice(3, 4);
+                if (_dot === '1') {
+                    _duration *= 1.5;
+                }
+                for (let i = 0; i < _duration; i++) {
+                    result.push(_note);
+                }
+                result[result.length - 1] = String(result[result.length - 1]);
+            });
+            console.log(result);
+            melodyToStatistics(result);
+        }
+        // 将乐谱转换为取值范围
+        function melodyToStatistics(melody) {
+            result_tone = Array(15).fill('', 0, 15);
+            result_line = Array(15).fill('', 0, 15);
+            var divide;
+            melody.forEach(function (note, index) {
+                if (divide || index === 0) {
+                    result_tone[melody[index] - 1] += `${index + 0.2}\\le t<${index + 1},`;
+                    result_line[melody[index] - 1] += `${index + 0.2}-t\\le x<${index + 1}-t,`;
+                } else {
+                    result_tone[melody[index] - 1] += `${index}\\le t<${index + 1},`;
+                    result_line[melody[index] - 1] += `${index}-t\\le x<${index + 1}-t,`;
+                }
+                divide = typeof note === 'string';
+            });
+            result_tone.forEach(function (item, index) {
+                result_tone[index] = `${result_tone[index].substring(0, result_tone[index].length - 1)}`;
+                result_line[index] = `${result_line[index].substring(0, result_line[index].length - 1)}`;
+            });
+            console.log(result_tone);
+            console.log(result_line);
+            document.querySelector('.result-length').innerText = `总长度：${melody.length}`;
+            var result_tone_str = '';
+            result_tone.forEach(function (item, index) {
+                result_tone_str += `<div class="list-item" onclick="copyHandle('${item.replaceAll('\\', '\\\\')}');showCopyMsg_2(this);" style="animation-delay: ${index * 0.02}s;" empty='${item.length == 0 ? 'true' : 'false'}'>
+                ${item.length == 0 ? '没有数据' : item}
+                <div class="list-item-index">${index + 1}</div>
+                <div class="result-copy-msg">已复制</div>
+            </div>`;
+                document.querySelector('.results-tone').innerHTML = result_tone_str;
+            });
+            var result_line_str = '';
+            result_line.forEach(function (item, index) {
+                result_line_str += `<div class="list-item" onclick="copyHandle('${item.replaceAll('\\', '\\\\')}');showCopyMsg_2(this);" style="animation-delay: ${index * 0.02}s;" empty='${item.length == 0 ? 'true' : 'false'}'>
+                ${item.length == 0 ? '没有数据' : item}
+                <div class="list-item-index">${index + 1}</div>
+                <div class="result-copy-msg">已复制</div>
+            </div>`;
+                document.querySelector('.results-line').innerHTML = result_line_str;
+            });
+        }
+        // 复制文本
+        function copyHandle(content) {
+            let copy = (e) => {
+                e.preventDefault()
+                e.clipboardData.setData('text/plain', content)
+                document.removeEventListener('copy', copy)
+            }
+            document.addEventListener('copy', copy)
+            document.execCommand("Copy");
+        }
+        // 显示复制成功提示
+        function showCopyMsg_1() {
+            var btn = document.querySelector('.btn-copy-melody');
+            btn.innerText = '已复制';
+            setTimeout(() => {
+                btn.innerText = '复制';
+            }, 2000);
+        }
+        function showCopyMsg_2(element) {
+            if (element.getAttribute('empty') === 'true') return;
+            element.querySelector('.result-copy-msg').style.opacity = 1;
+            setTimeout(() => {
+                element.querySelector('.result-copy-msg').style.opacity = 0;
+            }, 2000);
+        }
+        const input_note = document.querySelector('#input_note');
+        const input_pitch_0 = document.querySelector('.pitch-0');
+        const input_pitch_2 = document.querySelector('.pitch-2');
+        const input_duration_2 = document.querySelector('.duration-2');
+        const input_duration_4 = document.querySelector('.duration-4');
+        const input_dot = document.querySelector('.note-dot');
+        // 监听音符输入
+        input_note.addEventListener('input', function () {
+            current_note[0] = input_note.value;
+            // 休止符特殊处理
+            if (input_note.value == '0') {
+                current_note[1] = '0';
+            }
+        });
+        // 监听回车事件
+        document.addEventListener('keydown', function (event) {
+            if (event.keyCode === 13) {
+                addNote();
+            }
+        });
+        var current_note = ['-', '1', '1', '-'];
+        // 初始化当前音符
+        function initializeCurrentNote() {
+            current_note = ['-', '1', '1', '-'];
+            input_note.value = '';
+            [input_pitch_0, input_pitch_2, input_duration_2, input_duration_4, input_dot].forEach(function (item) {
+                item.classList.remove('active');
+            });
+        }
+        // 设置当前音符
+        function setCurrentNote(type, value) {
+            switch (type) {
+                case 'pitch':
+                    // 设置音高
+                    if (input_note.value == '0') return; // 跳过休止符
+                    if (value == current_note[1]) {
+                        current_note[1] = '1';
+                        input_pitch_0.classList.remove('active');
+                        input_pitch_2.classList.remove('active');
+                    } else if (value == '0') {
+                        current_note[1] = '0';
+                        input_pitch_0.classList.add('active');
+                        input_pitch_2.classList.remove('active');
+                    } else if (value == '2') {
+                        current_note[1] = '2';
+                        input_pitch_0.classList.remove('active');
+                        input_pitch_2.classList.add('active');
+                    }
+                    break;
+                case 'duration':
+                    // 设置音长
+                    if (value == current_note[2]) {
+                        current_note[2] = '1';
+                        input_duration_2.classList.remove('active');
+                        input_duration_4.classList.remove('active');
+                    } else if (value == '2') {
+                        current_note[2] = '2';
+                        input_duration_2.classList.add('active');
+                        input_duration_4.classList.remove('active');
+                    } else if (value == '4') {
+                        current_note[2] = '4';
+                        input_duration_2.classList.add('active');
+                        input_duration_4.classList.add('active');
+                    }
+                    break;
+                case 'dot':
+                    // 设置附点
+                    if (current_note[3] == '-') {
+                        current_note[3] = '1';
+                        input_dot.classList.add('active');
+                    } else {
+                        current_note[3] = '-';
+                        input_dot.classList.remove('active');
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        // 添加音符
+        function addNote() {
+            var note = input_note.value;
+            // 跳过非法输入
+            if (note == '' || note < 0 || note > 8) return;
+            const input_melody = document.querySelector('#input_melody');
+            // 自动添加逗号分隔
+            if (input_melody[input_melody.length - 1] != ',' && input_melody.value.length > 0) {
+                input_melody.value += ',';
+            }
+            current_note.forEach(function (item) {
+                // 没有附点的跳过附点
+                if (item != '-') {
+                    input_melody.value += item;
+                }
+            });
+            // 重置当前音符
+            initializeCurrentNote();
+            // 自动聚焦
+            input_note.focus();
+        }
+    </script>
+</body>
+
+</html>
